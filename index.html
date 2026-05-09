@@ -1,0 +1,1630 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HTML vs Markdown — The Unreasonable Effectiveness of HTML</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0f0f;
+    --surface: #181818;
+    --surface-hi: #202020;
+    --border: #2a2a2a;
+    --border-hi: #3a3a3a;
+    --text: #e8e4de;
+    --text-dim: #8a8580;
+    --text-faint: #5a5550;
+    --accent: #c4553a;
+    --accent-sub: rgba(196,85,58,0.12);
+    --positive: #5d8a6e;
+    --positive-sub: rgba(93,138,110,0.12);
+    --warn: #b89040;
+    --warn-sub: rgba(184,144,64,0.12);
+    --negative: #b84a4a;
+    --negative-sub: rgba(184,74,74,0.12);
+    --info: #5a8ab5;
+    --info-sub: rgba(90,138,181,0.12);
+    --sans: 'DM Sans', system-ui, sans-serif;
+    --display: 'Outfit', 'DM Sans', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', 'SF Mono', monospace;
+    --radius: 6px;
+    --preview-bg: #faf8f5;
+    --nav-bg: rgba(15,15,15,0.85);
+  }
+
+  [data-theme="light"] {
+    --bg: #f5f3f0;
+    --surface: #eae7e3;
+    --surface-hi: #dfdcd7;
+    --border: #d0ccc6;
+    --border-hi: #bfbab3;
+    --text: #1a1816;
+    --text-dim: #6b6560;
+    --text-faint: #9a9490;
+    --accent: #b84430;
+    --accent-sub: rgba(184,68,48,0.08);
+    --positive: #3d7a52;
+    --positive-sub: rgba(61,122,82,0.08);
+    --warn: #9a7830;
+    --warn-sub: rgba(154,120,48,0.08);
+    --negative: #a83e3e;
+    --negative-sub: rgba(168,62,62,0.08);
+    --info: #3e72a0;
+    --info-sub: rgba(62,114,160,0.08);
+    --preview-bg: #ffffff;
+    --nav-bg: rgba(245,243,240,0.85);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.65;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.018;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  }
+
+  [data-theme="light"] body::after { opacity: 0.01; }
+
+  /* ===== NAV ===== */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--nav-bg);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  nav .nav-brand {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--text);
+    letter-spacing: -0.3px;
+  }
+  nav .nav-brand span { color: var(--accent); }
+  nav .nav-links { display: flex; gap: 24px; }
+  nav .nav-links a {
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 13px;
+    transition: color 0.15s;
+  }
+  nav .nav-links a:hover { color: var(--text); }
+  nav .theme-toggle {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 6px 10px;
+    cursor: pointer;
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-family: var(--sans);
+    transition: border-color 0.15s, color 0.15s;
+  }
+  nav .theme-toggle:hover { border-color: var(--accent); color: var(--text); }
+
+  /* ===== HERO ===== */
+  .hero {
+    min-height: 100dvh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 64px;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 120px 48px 80px;
+  }
+  @media (max-width: 900px) {
+    .hero { grid-template-columns: 1fr; padding: 120px 24px 60px; gap: 40px; }
+  }
+  .hero-left { max-width: 520px; }
+  .hero-tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--accent);
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid var(--accent);
+  }
+  .hero h1 {
+    font-family: var(--display);
+    font-size: clamp(40px, 5.5vw, 68px);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -1.5px;
+    margin-bottom: 24px;
+    color: var(--text);
+  }
+  .hero h1 em {
+    font-style: normal;
+    color: var(--accent);
+  }
+  .hero-sub {
+    font-size: 17px;
+    color: var(--text-dim);
+    line-height: 1.7;
+    margin-bottom: 32px;
+    max-width: 440px;
+  }
+  .hero-meta {
+    display: flex;
+    gap: 20px;
+    font-size: 13px;
+    color: var(--text-faint);
+  }
+  .hero-meta span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .hero-visual {
+    width: 100%;
+  }
+
+  /* ===== SECTION ===== */
+  .section {
+    padding: 96px 48px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  @media (max-width: 768px) { .section { padding: 64px 20px; } }
+  .section-head {
+    margin-bottom: 48px;
+  }
+  .section-tag {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--accent);
+    font-weight: 600;
+    margin-bottom: 12px;
+  }
+  .section-title {
+    font-family: var(--display);
+    font-size: clamp(28px, 3.5vw, 42px);
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    line-height: 1.15;
+    margin-bottom: 12px;
+  }
+  .section-desc {
+    font-size: 16px;
+    color: var(--text-dim);
+    max-width: 600px;
+    line-height: 1.7;
+  }
+
+  /* ===== STATS ===== */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin: 48px 0;
+  }
+  @media (max-width: 768px) { .stats { grid-template-columns: repeat(2, 1fr); } }
+  .stat-card {
+    background: var(--surface);
+    padding: 28px;
+  }
+  .stat-value {
+    font-family: var(--display);
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--text);
+    letter-spacing: -1px;
+  }
+  .stat-label {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+
+  /* ===== QUOTE ===== */
+  .quote-block {
+    border-left: 3px solid var(--accent);
+    padding: 24px 32px;
+    margin: 48px 0;
+    background: var(--surface);
+    border-radius: 0 var(--radius) var(--radius) 0;
+  }
+  .quote-block p {
+    font-size: 18px;
+    line-height: 1.65;
+    font-style: italic;
+    color: var(--text);
+    margin-bottom: 12px;
+  }
+  .quote-block .attr {
+    font-size: 13px;
+    color: var(--text-dim);
+    font-style: normal;
+    font-weight: 500;
+  }
+
+  /* ===== COMPARISON ===== */
+  .comparison {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 48px;
+  }
+  @media (max-width: 768px) { .comparison { grid-template-columns: 1fr; } }
+  .comp-card { background: var(--bg); }
+  .comp-header {
+    padding: 12px 20px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+  .comp-header.md { color: var(--text-dim); }
+  .comp-header.html { color: var(--accent); }
+  .comp-body {
+    padding: 20px;
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.85;
+    white-space: pre-wrap;
+    color: var(--text-dim);
+    min-height: 180px;
+  }
+  .comp-body.html-render {
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--text);
+  }
+
+  /* ===== TABLE ===== */
+  .styled-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .styled-table thead th {
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    font-weight: 600;
+    border-bottom: 2px solid var(--border);
+  }
+  .styled-table tbody td {
+    padding: 10px 14px;
+    font-size: 13px;
+    border-bottom: 1px solid var(--border);
+  }
+  .styled-table tbody tr:last-child td { border-bottom: none; }
+  .styled-table tbody tr:hover { background: rgba(255,255,255,0.02); }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+  .badge-pos { background: var(--positive-sub); color: var(--positive); }
+  .badge-neg { background: var(--negative-sub); color: var(--negative); }
+  .badge-warn { background: var(--warn-sub); color: var(--warn); }
+  .badge-info { background: var(--info-sub); color: var(--info); }
+
+  /* ===== DEMO BOX ===== */
+  .demo-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px;
+    margin-bottom: 48px;
+  }
+  .demo-box h3 {
+    font-family: var(--display);
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  /* ===== SVG DIAGRAMS ===== */
+  .diagram-wrap {
+    display: flex;
+    justify-content: center;
+    margin: 32px 0;
+  }
+  .diagram-wrap svg { max-width: 100%; height: auto; }
+
+  /* ===== CODE BLOCK ===== */
+  .code-block {
+    background: var(--surface-hi);
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .code-toolbar {
+    display: flex;
+    align-items: center;
+    padding: 10px 16px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+  .code-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .code-content {
+    padding: 16px 20px;
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.85;
+    overflow-x: auto;
+  }
+
+  /* ===== INTERACTIVE ===== */
+  .playground {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px;
+  }
+  .playground h3 {
+    font-family: var(--display);
+    font-weight: 600;
+    margin-bottom: 20px;
+    font-size: 18px;
+  }
+  .slider-row { margin-bottom: 16px; }
+  .slider-row label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    margin-bottom: 6px;
+    color: var(--text-dim);
+  }
+  .slider-row label span { color: var(--accent); font-weight: 600; font-family: var(--mono); font-size: 12px; }
+  .slider-row input[type="range"] {
+    width: 100%;
+    height: 4px;
+    -webkit-appearance: none;
+    background: var(--border);
+    border-radius: 2px;
+    outline: none;
+  }
+  .slider-row input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    border: 2px solid var(--bg);
+  }
+  .preview-area {
+    margin-top: 20px;
+    padding: 36px;
+    background: var(--preview-bg);
+    border-radius: var(--radius);
+    text-align: center;
+  }
+  .demo-btn {
+    display: inline-block;
+    padding: 12px 32px;
+    border: none;
+    border-radius: 4px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.15s, background 0.3s;
+    color: #fff;
+    font-family: var(--sans);
+  }
+  .action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 16px;
+    padding: 8px 18px;
+    background: var(--surface-hi);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text-dim);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+    font-family: var(--sans);
+  }
+  .action-btn:hover { border-color: var(--accent); color: var(--text); }
+
+  /* ===== BENTO GRID ===== */
+  .bento {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(280px, 0.82fr);
+    grid-auto-rows: minmax(290px, auto);
+    grid-template-areas:
+      "spec spec review"
+      "design reports reports"
+      "editor editor ingest";
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .bento-cell {
+    background: var(--bg);
+    padding: 28px;
+    transition: background 0.15s;
+    min-width: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .bento-cell:hover { background: var(--surface); }
+  .bento-cell.wide { grid-column: span 2; }
+  .bento-cell[data-area="spec"] { grid-area: spec; }
+  .bento-cell[data-area="review"] { grid-area: review; }
+  .bento-cell[data-area="design"] { grid-area: design; }
+  .bento-cell[data-area="reports"] { grid-area: reports; }
+  .bento-cell[data-area="editor"] { grid-area: editor; }
+  .bento-cell[data-area="ingest"] { grid-area: ingest; }
+  @media (max-width: 900px) {
+    .bento {
+      grid-template-columns: 1fr;
+      grid-auto-rows: auto;
+      grid-template-areas: "spec" "review" "design" "reports" "editor" "ingest";
+    }
+    .bento-cell.wide { grid-column: span 1; }
+  }
+  .bento-preview {
+    height: 168px;
+    min-height: 168px;
+    width: calc(100% + 56px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 18px 24px;
+    margin: -28px -28px 20px;
+    border-bottom: 1px solid var(--border);
+    overflow: hidden;
+    background: var(--surface);
+  }
+  .bento-preview svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    max-width: 760px;
+    overflow: visible;
+  }
+  .bento-cell:not(.wide):not([data-area="editor"]) .bento-preview svg {
+    max-width: 360px;
+  }
+  .bento-cell h3 {
+    font-family: var(--display);
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    letter-spacing: -0.2px;
+  }
+  .bento-cell p {
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.65;
+    margin-bottom: 14px;
+    max-width: 64ch;
+  }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tag {
+    padding: 3px 10px;
+    background: var(--surface-hi);
+    color: var(--text-dim);
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+  }
+
+  /* ===== WORKFLOW ===== */
+  .workflow {
+    display: flex;
+    gap: 0;
+    margin: 48px 0;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .wf-step {
+    flex: 0 0 auto;
+    width: 200px;
+    padding: 20px 16px;
+    text-align: center;
+    position: relative;
+  }
+  @media (max-width: 768px) { .wf-step { width: 140px; } }
+  .wf-num {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    margin-bottom: 10px;
+    background: var(--accent-sub);
+    color: var(--accent);
+  }
+  .wf-step h4 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .wf-step p { font-size: 12px; color: var(--text-dim); }
+  .wf-arrow {
+    display: flex;
+    align-items: center;
+    color: var(--border-hi);
+    font-size: 16px;
+    padding: 0 4px;
+  }
+
+  /* ===== FAQ ===== */
+  .faq-item {
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .faq-item:hover { background: var(--surface); }
+  .faq-q {
+    padding: 20px 0;
+    font-size: 15px;
+    font-weight: 500;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-right: 16px;
+  }
+  .faq-q::after {
+    content: '+';
+    font-size: 18px;
+    font-weight: 300;
+    color: var(--text-faint);
+    transition: transform 0.25s, color 0.25s;
+  }
+  .faq-item.open .faq-q::after { transform: rotate(45deg); color: var(--accent); }
+  .faq-a {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s;
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.7;
+  }
+  .faq-item.open .faq-a {
+    max-height: 200px;
+    padding-bottom: 20px;
+  }
+
+  /* ===== KANBAN ===== */
+  .kanban {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  @media (max-width: 768px) { .kanban { grid-template-columns: repeat(2, 1fr); } }
+  .kanban-col {
+    background: var(--bg);
+    padding: 12px;
+    min-height: 240px;
+  }
+  .kanban-col-title {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--border);
+  }
+  .kanban-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 10px 12px;
+    margin-bottom: 6px;
+    font-size: 13px;
+    cursor: grab;
+    transition: transform 0.12s, box-shadow 0.12s;
+  }
+  .kanban-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  }
+  .kanban-card:active { cursor: grabbing; }
+  .kanban-card-tag {
+    display: inline-block;
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 2px;
+    margin-top: 4px;
+    font-weight: 600;
+  }
+
+  /* ===== DIFF ===== */
+  .diff-line {
+    padding: 2px 16px;
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.85;
+  }
+  .diff-add { background: var(--positive-sub); color: var(--positive); }
+  .diff-del { background: var(--negative-sub); color: var(--negative); }
+  .diff-annotation {
+    float: right;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 2px;
+    margin-top: 3px;
+    font-weight: 500;
+  }
+
+  /* ===== CTA ===== */
+  .cta-section {
+    text-align: center;
+    padding: 96px 24px;
+    border-top: 1px solid var(--border);
+  }
+  .cta-btn {
+    display: inline-block;
+    padding: 14px 36px;
+    background: var(--accent);
+    border: none;
+    border-radius: var(--radius);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: transform 0.15s;
+    font-family: var(--sans);
+  }
+  .cta-btn:hover { transform: translateY(-2px); }
+
+  /* ===== FOOTER ===== */
+  footer {
+    text-align: center;
+    padding: 32px 24px;
+    color: var(--text-faint);
+    font-size: 12px;
+    border-top: 1px solid var(--border);
+  }
+  footer a { color: var(--accent); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+
+  /* ===== DIVIDER ===== */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 0 auto;
+    max-width: 1200px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== NAV ===== -->
+<nav>
+  <div class="nav-brand">HTML <span>vs</span> Markdown</div>
+  <div class="nav-links">
+    <a href="#why">为什么</a>
+    <a href="#density">信息密度</a>
+    <a href="#visual">视觉清晰</a>
+    <a href="#interaction">双向交互</a>
+    <a href="#cases">核心用例</a>
+    <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">
+      <svg id="themeIcon" width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="3" stroke="currentColor" stroke-width="1.2"/><path d="M7 1v2M7 11v2M1 7h2M11 7h2M2.8 2.8l1.4 1.4M9.8 9.8l1.4 1.4M2.8 11.2l1.4-1.4M9.8 4.2l1.4-1.4" stroke="currentColor" stroke-width="1" stroke-linecap="round"/></svg>
+      <span id="themeLabel">浅色</span>
+    </button>
+  </div>
+</nav>
+
+<!-- ===== HERO ===== -->
+<section class="hero">
+  <div class="hero-left">
+    <div class="hero-tag">Thariq / Claude Code Team / 2026.05</div>
+    <h1>The Unreasonable<br>Effectiveness<br>of <em>HTML</em></h1>
+    <p class="hero-sub">当 AI 越来越强大，Markdown 正在成为限制我们沟通的瓶颈。HTML 带来更丰富的信息密度、视觉表达和双向交互。</p>
+    <div class="hero-meta">
+      <span>
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.2"/><path d="M7 4v3l2.5 1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        2026.05
+      </span>
+      <span>
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1.5" y="1.5" width="11" height="11" rx="2" stroke="currentColor" stroke-width="1.2"/><path d="M5 5l4 4M9 5l-4 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        Claude Code
+      </span>
+      <span>
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 10l3-3 2 2 2.5-3L12 10" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        AI Training
+      </span>
+    </div>
+  </div>
+  <div class="hero-visual">
+    <svg viewBox="0 0 520 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Markdown card -->
+      <rect x="0" y="0" width="240" height="320" rx="8" fill="#181818" stroke="#2a2a2a" stroke-width="1"/>
+      <text x="16" y="28" fill="#5a5550" font-size="10" font-family="'JetBrains Mono',monospace" font-weight="500">plan.md</text>
+      <line x1="0" y1="40" x2="240" y2="40" stroke="#2a2a2a" stroke-width="1"/>
+      <text x="16" y="64" fill="#8a8580" font-size="10" font-family="'JetBrains Mono',monospace"># Project Spec</text>
+      <text x="16" y="84" fill="#8a8580" font-size="10" font-family="'JetBrains Mono',monospace">## Overview</text>
+      <text x="16" y="104" fill="#5a5550" font-size="10" font-family="'JetBrains Mono',monospace">This is a plan for the new</text>
+      <text x="16" y="120" fill="#5a5550" font-size="10" font-family="'JetBrains Mono',monospace">feature that includes...</text>
+      <text x="16" y="148" fill="#8a8580" font-size="10" font-family="'JetBrains Mono',monospace">## Architecture</text>
+      <text x="16" y="172" fill="#5a5550" font-size="10" font-family="'JetBrains Mono',monospace">+--------+    +-------+</text>
+      <text x="16" y="188" fill="#5a5550" font-size="10" font-family="'JetBrains Mono',monospace">| Client | -> | API   |</text>
+      <text x="16" y="204" fill="#5a5550" font-size="10" font-family="'JetBrains Mono',monospace">+--------+    +-------+</text>
+      <text x="16" y="220" fill="#5a5550" font-size="10" font-family="'JetBrains Mono',monospace">|  DB    | -> | Cache |</text>
+      <text x="16" y="236" fill="#5a5550" font-size="10" font-family="'JetBrains Mono',monospace">+--------+    +-------+</text>
+      <rect x="16" y="260" width="208" height="44" rx="4" fill="rgba(184,74,74,0.06)" stroke="rgba(184,74,74,0.2)" stroke-width="0.5"/>
+      <text x="120" y="278" text-anchor="middle" fill="#b84a4a" font-size="9" font-family="'JetBrains Mono',monospace">ASCII only. No color.</text>
+      <text x="120" y="294" text-anchor="middle" fill="#b84a4a" font-size="9" font-family="'JetBrains Mono',monospace">No interaction. Hard to read.</text>
+
+      <!-- VS -->
+      <rect x="248" y="144" width="32" height="32" rx="16" fill="var(--accent,#c4553a)"/>
+      <text x="264" y="165" text-anchor="middle" fill="white" font-size="11" font-weight="700" font-family="var(--sans)">vs</text>
+
+      <!-- HTML card -->
+      <rect x="288" y="0" width="232" height="320" rx="8" fill="#181818" stroke="var(--accent,#c4553a)" stroke-width="1"/>
+      <text x="304" y="28" fill="#8a8580" font-size="10" font-family="'JetBrains Mono',monospace" font-weight="500">plan.html</text>
+      <line x1="288" y1="40" x2="520" y2="40" stroke="#2a2a2a" stroke-width="1"/>
+      <!-- Rich render mockup -->
+      <rect x="304" y="56" width="120" height="7" rx="3" fill="#e8e4de"/>
+      <rect x="304" y="72" width="180" height="4" rx="2" fill="#5a5550"/>
+      <rect x="304" y="82" width="140" height="4" rx="2" fill="#5a5550"/>
+      <!-- Color palette -->
+      <rect x="304" y="100" width="28" height="28" rx="4" fill="#c4553a"/>
+      <rect x="338" y="100" width="28" height="28" rx="4" fill="#5d8a6e"/>
+      <rect x="372" y="100" width="28" height="28" rx="4" fill="#b89040"/>
+      <rect x="406" y="100" width="28" height="28" rx="4" fill="#5a8ab5"/>
+      <rect x="440" y="100" width="28" height="28" rx="4" fill="#b84a4a"/>
+      <!-- Progress bars -->
+      <rect x="304" y="140" width="200" height="5" rx="2" fill="#2a2a2a"/>
+      <rect x="304" y="140" width="145" height="5" rx="2" fill="#c4553a"/>
+      <rect x="304" y="152" width="200" height="5" rx="2" fill="#2a2a2a"/>
+      <rect x="304" y="152" width="100" height="5" rx="2" fill="#5d8a6e"/>
+      <!-- Mini bar chart -->
+      <rect x="304" y="172" width="14" height="36" rx="2" fill="#c4553a" opacity="0.4"/>
+      <rect x="324" y="184" width="14" height="24" rx="2" fill="#c4553a" opacity="0.5"/>
+      <rect x="344" y="170" width="14" height="38" rx="2" fill="#c4553a" opacity="0.6"/>
+      <rect x="364" y="178" width="14" height="30" rx="2" fill="#c4553a" opacity="0.7"/>
+      <rect x="384" y="166" width="14" height="42" rx="2" fill="#c4553a"/>
+      <rect x="404" y="174" width="14" height="34" rx="2" fill="#c4553a" opacity="0.8"/>
+      <!-- Status pills -->
+      <rect x="304" y="224" width="44" height="18" rx="3" fill="rgba(93,138,110,0.15)"/>
+      <text x="326" y="237" text-anchor="middle" fill="#5d8a6e" font-size="9" font-weight="600">Done</text>
+      <rect x="354" y="224" width="34" height="18" rx="3" fill="rgba(184,144,64,0.15)"/>
+      <text x="371" y="237" text-anchor="middle" fill="#b89040" font-size="9" font-weight="600">WIP</text>
+      <rect x="394" y="224" width="40" height="18" rx="3" fill="rgba(184,74,74,0.15)"/>
+      <text x="414" y="237" text-anchor="middle" fill="#b84a4a" font-size="9" font-weight="600">Todo</text>
+      <!-- Positive note -->
+      <rect x="304" y="260" width="200" height="44" rx="4" fill="rgba(93,138,110,0.06)" stroke="rgba(93,138,110,0.2)" stroke-width="0.5"/>
+      <text x="404" y="278" text-anchor="middle" fill="#5d8a6e" font-size="9" font-family="'JetBrains Mono',monospace">Tables. Colors. SVG charts.</text>
+      <text x="404" y="294" text-anchor="middle" fill="#5d8a6e" font-size="9" font-family="'JetBrains Mono',monospace">Interaction. Responsive. Shareable.</text>
+    </svg>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ===== WHY HTML ===== -->
+<section class="section" id="why">
+  <div class="section-head">
+    <div class="section-tag">核心理念</div>
+    <h2 class="section-title">为什么选择 HTML？</h2>
+    <p class="section-desc">Markdown 已经成为 Agent 与人沟通的主要格式——但它正在跟不上 Agent 能力的增长。</p>
+  </div>
+
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-value">100</div>
+      <div class="stat-label">你实际阅读 Markdown 的行数上限</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">2-4x</div>
+      <div class="stat-label">HTML 生成耗时（但值得）</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">0</div>
+      <div class="stat-label">Markdown 原生交互能力</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">1M</div>
+      <div class="stat-label">Opus 4.7 上下文窗口</div>
+    </div>
+  </div>
+
+  <div class="quote-block">
+    <p>我发现自己越来越不再亲自编辑这些文件，而是将它们作为规格、参考文件、头脑风暴的输出。当我确实需要编辑时，通常是让 Claude 来改——这消除了 Markdown 最大的优势之一。</p>
+    <div class="attr">Thariq, Claude Code Team</div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ===== INFORMATION DENSITY ===== -->
+<section class="section" id="density">
+  <div class="section-head">
+    <div class="section-tag">01 / 信息密度</div>
+    <h2 class="section-title">信息密度</h2>
+    <p class="section-desc">同样的内容，Markdown 只能给你纯文本和 ASCII 图。HTML 可以渲染表格、CSS、SVG、交互……</p>
+  </div>
+
+  <!-- Comparison: Table -->
+  <div class="comparison">
+    <div class="comp-card">
+      <div class="comp-header md">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="1" y="1" width="10" height="10" rx="1.5" stroke="currentColor" stroke-width="1"/></svg>
+        Markdown
+      </div>
+      <div class="comp-body">| Feature   | Markdown | HTML       |
+|-----------|----------|------------|
+| Tables    | basic    | styled     |
+| Colors    | none     | CSS        |
+| Charts    | ASCII    | SVG        |
+| Interact  | none     | JS + CSS   |
+| Sharing   | attached | link       |
+| Responsive| none     | yes        |</div>
+    </div>
+    <div class="comp-card">
+      <div class="comp-header html">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="currentColor" stroke-width="1"/><path d="M4 6l1.5 1.5L8 4.5" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        HTML Rendered
+      </div>
+      <div class="comp-body html-render">
+        <table class="styled-table">
+          <thead><tr><th>Feature</th><th>Markdown</th><th>HTML</th></tr></thead>
+          <tbody>
+            <tr><td>Tables</td><td><span class="badge badge-warn">Basic</span></td><td><span class="badge badge-pos">Styled</span></td></tr>
+            <tr><td>Colors</td><td><span class="badge badge-neg">None</span></td><td><span class="badge badge-pos">CSS</span></td></tr>
+            <tr><td>Charts</td><td><span class="badge badge-neg">ASCII only</span></td><td><span class="badge badge-pos">SVG</span></td></tr>
+            <tr><td>Interaction</td><td><span class="badge badge-neg">None</span></td><td><span class="badge badge-pos">JS + CSS</span></td></tr>
+            <tr><td>Sharing</td><td><span class="badge badge-warn">Attached</span></td><td><span class="badge badge-pos">Link</span></td></tr>
+            <tr><td>Responsive</td><td><span class="badge badge-neg">None</span></td><td><span class="badge badge-pos">Yes</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Capability Diagram -->
+  <div class="diagram-wrap">
+    <svg viewBox="0 0 720 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="360" cy="140" r="52" fill="rgba(196,85,58,0.08)" stroke="#c4553a" stroke-width="1.5"/>
+      <text x="360" y="135" text-anchor="middle" fill="#e8e4de" font-size="16" font-weight="700" font-family="Outfit,sans-serif">HTML</text>
+      <text x="360" y="155" text-anchor="middle" fill="#8a8580" font-size="10">Capabilities</text>
+
+      <line x1="360" y1="88" x2="360" y2="40" stroke="#2a2a2a" stroke-width="1"/>
+      <circle cx="360" cy="28" r="20" fill="rgba(90,138,181,0.1)" stroke="#5a8ab5" stroke-width="1"/>
+      <text x="360" y="25" text-anchor="middle" fill="#5a8ab5" font-size="10" font-weight="600">Tables</text>
+      <text x="360" y="37" text-anchor="middle" fill="#5a5550" font-size="7">&lt;table&gt;</text>
+
+      <line x1="404" y1="104" x2="530" y2="40" stroke="#2a2a2a" stroke-width="1"/>
+      <circle cx="548" cy="28" r="20" fill="rgba(93,138,110,0.1)" stroke="#5d8a6e" stroke-width="1"/>
+      <text x="548" y="25" text-anchor="middle" fill="#5d8a6e" font-size="10" font-weight="600">Design</text>
+      <text x="548" y="37" text-anchor="middle" fill="#5a5550" font-size="7">CSS</text>
+
+      <line x1="412" y1="140" x2="568" y2="140" stroke="#2a2a2a" stroke-width="1"/>
+      <circle cx="590" cy="140" r="20" fill="rgba(184,144,64,0.1)" stroke="#b89040" stroke-width="1"/>
+      <text x="590" y="137" text-anchor="middle" fill="#b89040" font-size="10" font-weight="600">SVG</text>
+      <text x="590" y="149" text-anchor="middle" fill="#5a5550" font-size="7">Illustration</text>
+
+      <line x1="404" y1="176" x2="530" y2="240" stroke="#2a2a2a" stroke-width="1"/>
+      <circle cx="548" cy="252" r="20" fill="rgba(196,85,58,0.1)" stroke="#c4553a" stroke-width="1"/>
+      <text x="548" y="249" text-anchor="middle" fill="#c4553a" font-size="10" font-weight="600">Interaction</text>
+      <text x="548" y="261" text-anchor="middle" fill="#5a5550" font-size="7">JS + CSS</text>
+
+      <line x1="360" y1="192" x2="360" y2="240" stroke="#2a2a2a" stroke-width="1"/>
+      <circle cx="360" cy="252" r="20" fill="rgba(90,138,181,0.1)" stroke="#5a8ab5" stroke-width="1"/>
+      <text x="360" y="249" text-anchor="middle" fill="#5a8ab5" font-size="10" font-weight="600">Spatial</text>
+      <text x="360" y="261" text-anchor="middle" fill="#5a5550" font-size="7">Canvas</text>
+
+      <line x1="316" y1="176" x2="190" y2="240" stroke="#2a2a2a" stroke-width="1"/>
+      <circle cx="172" cy="252" r="20" fill="rgba(93,138,110,0.1)" stroke="#5d8a6e" stroke-width="1"/>
+      <text x="172" y="249" text-anchor="middle" fill="#5d8a6e" font-size="10" font-weight="600">Code</text>
+      <text x="172" y="261" text-anchor="middle" fill="#5a5550" font-size="7">&lt;script&gt;</text>
+
+      <line x1="308" y1="140" x2="152" y2="140" stroke="#2a2a2a" stroke-width="1"/>
+      <circle cx="130" cy="140" r="20" fill="rgba(184,144,64,0.1)" stroke="#b89040" stroke-width="1"/>
+      <text x="130" y="137" text-anchor="middle" fill="#b89040" font-size="10" font-weight="600">Images</text>
+      <text x="130" y="149" text-anchor="middle" fill="#5a5550" font-size="7">&lt;img&gt;</text>
+
+      <line x1="316" y1="104" x2="190" y2="40" stroke="#2a2a2a" stroke-width="1"/>
+      <circle cx="172" cy="28" r="20" fill="rgba(196,85,58,0.1)" stroke="#c4553a" stroke-width="1"/>
+      <text x="172" y="25" text-anchor="middle" fill="#c4553a" font-size="10" font-weight="600">Workflow</text>
+      <text x="172" y="37" text-anchor="middle" fill="#5a5550" font-size="7">SVG + HTML</text>
+    </svg>
+  </div>
+
+  <!-- Color comparison -->
+  <div class="comparison">
+    <div class="comp-card">
+      <div class="comp-header md">Markdown Colors</div>
+      <div class="comp-body" style="color:#5a5550;">
+# Color Palette
+
+- Primary: Terracotta (~#C4553A)
+- Success: Sage Green
+- Warning: Warm Amber
+- Info: Slate Blue
+- Error: Muted Red
+
+Cannot render actual colors.</div>
+    </div>
+    <div class="comp-card">
+      <div class="comp-header html">HTML Colors</div>
+      <div class="comp-body html-render" style="display:flex;gap:20px;align-items:center;flex-wrap:wrap;">
+        <div style="text-align:center">
+          <div style="width:56px;height:56px;border-radius:4px;background:#c4553a;margin-bottom:6px"></div>
+          <div style="font-size:11px;color:var(--text-dim)">Primary</div>
+          <div style="font-size:10px;color:var(--text-faint);font-family:var(--mono)">#c4553a</div>
+        </div>
+        <div style="text-align:center">
+          <div style="width:56px;height:56px;border-radius:4px;background:#5d8a6e;margin-bottom:6px"></div>
+          <div style="font-size:11px;color:var(--text-dim)">Success</div>
+          <div style="font-size:10px;color:var(--text-faint);font-family:var(--mono)">#5d8a6e</div>
+        </div>
+        <div style="text-align:center">
+          <div style="width:56px;height:56px;border-radius:4px;background:#b89040;margin-bottom:6px"></div>
+          <div style="font-size:11px;color:var(--text-dim)">Warning</div>
+          <div style="font-size:10px;color:var(--text-faint);font-family:var(--mono)">#b89040</div>
+        </div>
+        <div style="text-align:center">
+          <div style="width:56px;height:56px;border-radius:4px;background:#5a8ab5;margin-bottom:6px"></div>
+          <div style="font-size:11px;color:var(--text-dim)">Info</div>
+          <div style="font-size:10px;color:var(--text-faint);font-family:var(--mono)">#5a8ab5</div>
+        </div>
+        <div style="text-align:center">
+          <div style="width:56px;height:56px;border-radius:4px;background:#b84a4a;margin-bottom:6px"></div>
+          <div style="font-size:11px;color:var(--text-dim)">Error</div>
+          <div style="font-size:10px;color:var(--text-faint);font-family:var(--mono)">#b84a4a</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ===== VISUAL CLARITY ===== -->
+<section class="section" id="visual">
+  <div class="section-head">
+    <div class="section-tag">02 / 视觉清晰</div>
+    <h2 class="section-title">视觉清晰度与可读性</h2>
+    <p class="section-desc">超过 100 行的 Markdown 文件几乎没人真正读完。HTML 可以用标签页、插图、链接等来组织信息。</p>
+  </div>
+
+  <!-- Code review diff -->
+  <div class="comparison">
+    <div class="comp-card">
+      <div class="comp-header md">Markdown Code Review</div>
+      <div class="comp-body" style="font-size:11px;">
+## Code Review: PR #42
+
+### streaming.ts
+```diff
+- const buffer = new Buffer(1024);
++ const stream = new ReadableStream({
++   controller.enqueue(chunk);
++ });
+```
+
+**Issue**: Buffer deprecated
+**Severity**: Medium
+**Note**: Need backpressure</div>
+    </div>
+    <div class="comp-card">
+      <div class="comp-header html">HTML Code Review</div>
+      <div class="comp-body html-render" style="padding:0">
+        <div class="code-block" style="border:none;border-radius:0">
+          <div class="code-toolbar">
+            <div class="code-dot" style="background:#b84a4a"></div>
+            <div class="code-dot" style="background:#b89040"></div>
+            <div class="code-dot" style="background:#5d8a6e"></div>
+            <span style="margin-left:8px;font-size:11px;color:var(--text-dim)">streaming.ts</span>
+            <span class="badge badge-warn" style="margin-left:auto">Medium</span>
+          </div>
+          <div class="code-content">
+            <div class="diff-line diff-del">- const buffer = new Buffer(1024);<span class="diff-annotation" style="background:var(--negative-sub);color:var(--negative)">Deprecated</span></div>
+            <div class="diff-line diff-add">+ const stream = new ReadableStream({</div>
+            <div class="diff-line diff-add">+   controller.enqueue(chunk);</div>
+            <div class="diff-line diff-add">+ });<span class="diff-annotation" style="background:var(--warn-sub);color:var(--warn)">Handle backpressure</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Data Flow -->
+  <div class="demo-box">
+    <h3>
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1" y="1" width="16" height="16" rx="3" stroke="#c4553a" stroke-width="1.2"/><path d="M6 9h6M9 6v6" stroke="#c4553a" stroke-width="1.2" stroke-linecap="round"/></svg>
+      数据流图
+    </h3>
+    <div class="diagram-wrap">
+      <svg viewBox="0 0 740 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="0" y="30" width="130" height="100" rx="6" fill="rgba(90,138,181,0.06)" stroke="#5a8ab5" stroke-width="1"/>
+        <text x="65" y="68" text-anchor="middle" fill="#5a8ab5" font-size="12" font-weight="600">Client</text>
+        <text x="65" y="86" text-anchor="middle" fill="#8a8580" font-size="9">React App</text>
+        <text x="65" y="118" text-anchor="middle" fill="#5a5550" font-size="8">localhost:3000</text>
+
+        <path d="M130 80 L190 80" stroke="#5a5550" stroke-width="1" marker-end="url(#aGray)"/>
+        <text x="160" y="72" text-anchor="middle" fill="#5a5550" font-size="8">HTTP</text>
+
+        <rect x="190" y="30" width="130" height="100" rx="6" fill="rgba(196,85,58,0.06)" stroke="#c4553a" stroke-width="1"/>
+        <text x="255" y="68" text-anchor="middle" fill="#c4553a" font-size="12" font-weight="600">API Gateway</text>
+        <text x="255" y="86" text-anchor="middle" fill="#8a8580" font-size="9">Rate Limiter</text>
+        <text x="255" y="118" text-anchor="middle" fill="#5a5550" font-size="8">100 req/s</text>
+
+        <path d="M320 80 L380 80" stroke="#5a5550" stroke-width="1" marker-end="url(#aGray)"/>
+        <text x="350" y="72" text-anchor="middle" fill="#5a5550" font-size="8">gRPC</text>
+
+        <rect x="380" y="30" width="130" height="100" rx="6" fill="rgba(93,138,110,0.06)" stroke="#5d8a6e" stroke-width="1"/>
+        <text x="445" y="68" text-anchor="middle" fill="#5d8a6e" font-size="12" font-weight="600">Service</text>
+        <text x="445" y="86" text-anchor="middle" fill="#8a8580" font-size="9">Business Logic</text>
+        <text x="445" y="118" text-anchor="middle" fill="#5a5550" font-size="8">Node.js</text>
+
+        <path d="M510 80 L570 80" stroke="#5a5550" stroke-width="1" marker-end="url(#aGray)"/>
+        <text x="540" y="72" text-anchor="middle" fill="#5a5550" font-size="8">TCP</text>
+
+        <rect x="570" y="30" width="130" height="100" rx="6" fill="rgba(184,144,64,0.06)" stroke="#b89040" stroke-width="1"/>
+        <text x="635" y="68" text-anchor="middle" fill="#b89040" font-size="12" font-weight="600">Database</text>
+        <text x="635" y="86" text-anchor="middle" fill="#8a8580" font-size="9">PostgreSQL</text>
+        <text x="635" y="118" text-anchor="middle" fill="#5a5550" font-size="8">Primary + Replica</text>
+
+        <path d="M445 130 L445 150 L255 150 L255 130" stroke="#b84a4a" stroke-width="0.8" stroke-dasharray="4 3" marker-end="url(#aRed)"/>
+        <text x="350" y="148" text-anchor="middle" fill="#b84a4a" font-size="8">Cache Invalidation</text>
+
+        <defs>
+          <marker id="aGray" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L8 4L0 8z" fill="#5a5550"/></marker>
+          <marker id="aRed" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L8 4L0 8z" fill="#b84a4a"/></marker>
+        </defs>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ===== EASE OF SHARING ===== -->
+<section class="section">
+  <div class="section-head">
+    <div class="section-tag">03 / 易于分享</div>
+    <h2 class="section-title">易于分享</h2>
+    <p class="section-desc">Markdown 文件在浏览器中无法原生渲染。HTML 上传到 S3 即可分享链接，别人真正会去看。</p>
+  </div>
+
+  <div class="comparison">
+    <div class="comp-card">
+      <div class="comp-header md">Markdown Path</div>
+      <div class="comp-body html-render" style="color:var(--text-dim)">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:13px">
+          <span style="padding:6px 12px;background:var(--surface-hi);border-radius:3px;font-family:var(--mono);font-size:11px">plan.md</span>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 8h8M10 5l3 3-3 3" stroke="#5a5550" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span style="padding:6px 12px;background:var(--negative-sub);border-radius:3px;color:var(--negative);font-size:11px">Attached</span>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 8h8M10 5l3 3-3 3" stroke="#5a5550" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span style="padding:6px 12px;background:var(--surface-hi);border-radius:3px;font-size:11px">Email/Slack</span>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 8h8M10 5l3 3-3 3" stroke="#5a5550" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span style="padding:6px 12px;background:var(--negative-sub);border-radius:3px;color:var(--negative);font-size:11px">Needs tool to view</span>
+        </div>
+      </div>
+    </div>
+    <div class="comp-card">
+      <div class="comp-header html">HTML Path</div>
+      <div class="comp-body html-render" style="color:var(--text-dim)">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:13px">
+          <span style="padding:6px 12px;background:var(--surface-hi);border-radius:3px;font-family:var(--mono);font-size:11px">report.html</span>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 8h8M10 5l3 3-3 3" stroke="#5a5550" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span style="padding:6px 12px;background:var(--positive-sub);border-radius:3px;color:var(--positive);font-size:11px">Upload S3</span>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 8h8M10 5l3 3-3 3" stroke="#5a5550" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span style="padding:6px 12px;background:var(--surface-hi);border-radius:3px;font-size:11px">Share link</span>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 8h8M10 5l3 3-3 3" stroke="#5a5550" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span style="padding:6px 12px;background:var(--positive-sub);border-radius:3px;color:var(--positive);font-size:11px">Open in browser</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ===== TWO-WAY INTERACTION ===== -->
+<section class="section" id="interaction">
+  <div class="section-head">
+    <div class="section-tag">04 / 双向交互</div>
+    <h2 class="section-title">双向交互</h2>
+    <p class="section-desc">HTML 允许你在文档中直接调整参数、拖拽元素、切换选项，然后把结果复制回 Claude Code。</p>
+  </div>
+
+  <!-- Playground -->
+  <div class="playground">
+    <h3>按钮动画调参器</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+      <div>
+        <div class="slider-row">
+          <label>Border Radius <span id="radiusVal">8px</span></label>
+          <input type="range" id="btnRadius" min="0" max="30" value="8">
+        </div>
+        <div class="slider-row">
+          <label>Font Size <span id="fontVal">16px</span></label>
+          <input type="range" id="btnFont" min="12" max="28" value="16">
+        </div>
+        <div class="slider-row">
+          <label>Padding <span id="padVal">12px 30px</span></label>
+          <input type="range" id="btnPad" min="6" max="28" value="12">
+        </div>
+        <div class="slider-row">
+          <label>Hue <span id="hueVal">14</span></label>
+          <input type="range" id="btnHue" min="0" max="360" value="14">
+        </div>
+        <div class="slider-row">
+          <label>Shadow <span id="shadowVal">20%</span></label>
+          <input type="range" id="btnShadow" min="0" max="100" value="20">
+        </div>
+      </div>
+      <div>
+        <div class="preview-area">
+          <button class="demo-btn" id="demoBtn" style="background:#c4553a">Click Me</button>
+        </div>
+        <div style="text-align:center">
+          <button class="action-btn" onclick="copyParams()">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="3.5" y="3.5" width="7.5" height="7.5" rx="1" stroke="currentColor" stroke-width="1"/><path d="M8.5 3.5V2.25A1.25 1.25 0 007.25 1H2.75A1.25 1.25 0 001.5 2.25v4.5A1.25 1.25 0 002.75 8H4" stroke="currentColor" stroke-width="1"/></svg>
+            Copy as JSON
+          </button>
+          <span id="copyStatus" style="margin-left:8px;font-size:11px;color:var(--positive);opacity:0;transition:opacity 0.2s">已复制</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Kanban -->
+  <div class="demo-box" style="margin-top:32px">
+    <h3>
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1" y="2" width="4.5" height="14" rx="1.5" stroke="#5a8ab5" stroke-width="1"/><rect x="6.75" y="2" width="4.5" height="14" rx="1.5" stroke="#b89040" stroke-width="1"/><rect x="12.5" y="2" width="4.5" height="10" rx="1.5" stroke="#5d8a6e" stroke-width="1"/></svg>
+      拖拽看板
+    </h3>
+    <div class="kanban" id="kanban">
+      <div class="kanban-col" data-col="now">
+        <div class="kanban-col-title" style="color:var(--positive)">Now</div>
+        <div class="kanban-card" draggable="true" data-id="1">Fix login bug<span class="kanban-card-tag" style="background:var(--negative-sub);color:var(--negative)">Urgent</span></div>
+        <div class="kanban-card" draggable="true" data-id="2">API rate limiter<span class="kanban-card-tag" style="background:var(--warn-sub);color:var(--warn)">High</span></div>
+      </div>
+      <div class="kanban-col" data-col="next">
+        <div class="kanban-col-title" style="color:var(--info)">Next</div>
+        <div class="kanban-card" draggable="true" data-id="3">Dashboard refactor<span class="kanban-card-tag" style="background:var(--info-sub);color:var(--info)">Medium</span></div>
+        <div class="kanban-card" draggable="true" data-id="4">Dark mode support<span class="kanban-card-tag" style="background:var(--accent-sub);color:var(--accent)">Design</span></div>
+      </div>
+      <div class="kanban-col" data-col="later">
+        <div class="kanban-col-title" style="color:var(--warn)">Later</div>
+        <div class="kanban-card" draggable="true" data-id="5">Performance P2<span class="kanban-card-tag" style="background:var(--warn-sub);color:var(--warn)">Low</span></div>
+      </div>
+      <div class="kanban-col" data-col="cut">
+        <div class="kanban-col-title" style="color:var(--negative)">Cut</div>
+        <div class="kanban-card" draggable="true" data-id="6">Legacy compat layer<span class="kanban-card-tag" style="background:var(--negative-sub);color:var(--negative)">Dropped</span></div>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:16px">
+      <button class="action-btn" onclick="copyKanban()">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="3.5" y="3.5" width="7.5" height="7.5" rx="1" stroke="currentColor" stroke-width="1"/><path d="M8.5 3.5V2.25A1.25 1.25 0 007.25 1H2.75A1.25 1.25 0 001.5 2.25v4.5A1.25 1.25 0 002.75 8H4" stroke="currentColor" stroke-width="1"/></svg>
+        导出为 Markdown
+      </button>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ===== USE CASES ===== -->
+<section class="section" id="cases">
+  <div class="section-head">
+    <div class="section-tag">核心用例</div>
+    <h2 class="section-title">六大核心用例</h2>
+    <p class="section-desc">以下场景中，HTML 输出远胜 Markdown。</p>
+  </div>
+
+  <!-- Workflow -->
+  <div class="workflow">
+    <div class="wf-step">
+      <div class="wf-num">1</div>
+      <h4>探索</h4>
+      <p>头脑风暴与方案对比</p>
+    </div>
+    <div class="wf-arrow">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M6 12h12M15 7l5 5-5 5" stroke="var(--border-hi)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="wf-step">
+      <div class="wf-num">2</div>
+      <h4>规划</h4>
+      <p>Mockup 与规格文档</p>
+    </div>
+    <div class="wf-arrow">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M6 12h12M15 7l5 5-5 5" stroke="var(--border-hi)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="wf-step">
+      <div class="wf-num">3</div>
+      <h4>实现</h4>
+      <p>按计划编码构建</p>
+    </div>
+    <div class="wf-arrow">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M6 12h12M15 7l5 5-5 5" stroke="var(--border-hi)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="wf-step">
+      <div class="wf-num">4</div>
+      <h4>审查</h4>
+      <p>Diff 与代码注解</p>
+    </div>
+  </div>
+
+  <!-- Bento grid -->
+  <div class="bento">
+    <!-- 1: Spec & Explore (wide) -->
+    <div class="bento-cell wide" data-area="spec">
+      <div class="bento-preview" style="background:var(--surface)">
+        <svg viewBox="0 0 440 130" fill="none">
+          <rect x="10" y="10" width="200" height="110" rx="4" fill="var(--surface-hi)" stroke="var(--border)" stroke-width="0.5"/>
+          <rect x="24" y="26" width="80" height="5" rx="2" fill="var(--info)" opacity="0.4"/>
+          <rect x="24" y="38" width="120" height="3" rx="1" fill="var(--text-faint)" opacity="0.3"/>
+          <rect x="24" y="48" width="100" height="3" rx="1" fill="var(--text-faint)" opacity="0.3"/>
+          <text x="110" y="100" text-anchor="middle" fill="var(--info)" font-size="8" font-weight="600">Approach A</text>
+          <rect x="230" y="10" width="200" height="110" rx="4" fill="var(--surface-hi)" stroke="var(--border)" stroke-width="0.5"/>
+          <rect x="244" y="26" width="80" height="5" rx="2" fill="var(--positive)" opacity="0.4"/>
+          <rect x="244" y="38" width="120" height="3" rx="1" fill="var(--text-faint)" opacity="0.3"/>
+          <rect x="244" y="48" width="100" height="3" rx="1" fill="var(--text-faint)" opacity="0.3"/>
+          <text x="330" y="100" text-anchor="middle" fill="var(--positive)" font-size="8" font-weight="600">Approach B</text>
+        </svg>
+      </div>
+      <h3>规划与探索</h3>
+      <p>让 Claude 生成多种方案并排对比，包含 Mockup、数据流图、关键代码片段——全部在一个文件中。</p>
+      <div class="tags"><span class="tag">规格文档</span><span class="tag">方案对比</span><span class="tag">实现计划</span></div>
+    </div>
+
+    <!-- 2: Code Review -->
+    <div class="bento-cell" data-area="review">
+      <div class="bento-preview" style="background:var(--surface)">
+        <svg viewBox="0 0 200 130" fill="none">
+          <rect x="10" y="10" width="180" height="110" rx="4" fill="var(--surface-hi)" stroke="var(--border)" stroke-width="0.5"/>
+          <text x="22" y="28" fill="var(--accent)" font-size="7" font-family="'JetBrains Mono',monospace">streaming.ts</text>
+          <rect x="18" y="34" width="164" height="14" rx="2" fill="var(--negative-sub)"/>
+          <text x="24" y="44" fill="var(--negative)" font-size="7" font-family="'JetBrains Mono',monospace">- const buffer = new Buffer(1024);</text>
+          <rect x="18" y="52" width="164" height="14" rx="2" fill="var(--positive-sub)"/>
+          <text x="24" y="62" fill="var(--positive)" font-size="7" font-family="'JetBrains Mono',monospace">+ const stream = ReadableStream({</text>
+          <rect x="18" y="70" width="164" height="14" rx="2" fill="var(--positive-sub)"/>
+          <text x="24" y="80" fill="var(--positive)" font-size="7" font-family="'JetBrains Mono',monospace">+   controller.enqueue(chunk);</text>
+          <rect x="148" y="36" width="36" height="12" rx="2" fill="var(--warn-sub)"/>
+          <text x="166" y="44" text-anchor="middle" fill="var(--warn)" font-size="6" font-weight="600">Med</text>
+        </svg>
+      </div>
+      <h3>代码审查与理解</h3>
+      <p>渲染 Diff、注解、流程图。按严重程度着色，比 GitHub 默认 Diff 更清晰。</p>
+      <div class="tags"><span class="tag">PR 审查</span><span class="tag">代码理解</span></div>
+    </div>
+
+    <!-- 3: Design -->
+    <div class="bento-cell" data-area="design">
+      <div class="bento-preview" style="background:var(--surface)">
+        <svg viewBox="0 0 200 130" fill="none">
+          <rect x="10" y="10" width="80" height="110" rx="6" fill="var(--surface-hi)" stroke="var(--border)" stroke-width="0.5"/>
+          <circle cx="50" cy="44" r="16" fill="var(--accent-sub)" stroke="var(--accent)" stroke-width="0.5"/>
+          <rect x="25" y="72" width="50" height="18" rx="3" fill="var(--accent)"/>
+          <text x="50" y="84" text-anchor="middle" fill="white" font-size="7">Buy Now</text>
+          <rect x="110" y="18" width="80" height="10" rx="2" fill="var(--warn-sub)"/>
+          <text x="118" y="26" fill="var(--warn)" font-size="6">Duration: 0.3s</text>
+          <rect x="110" y="34" width="80" height="10" rx="2" fill="var(--positive-sub)"/>
+          <text x="118" y="42" fill="var(--positive)" font-size="6">Easing: ease-out</text>
+          <rect x="110" y="50" width="80" height="10" rx="2" fill="var(--info-sub)"/>
+          <text x="118" y="58" fill="var(--info)" font-size="6">Hue: 14</text>
+          <rect x="120" y="80" width="56" height="18" rx="3" fill="var(--accent-sub)" stroke="var(--accent)" stroke-width="0.5"/>
+          <text x="148" y="92" text-anchor="middle" fill="var(--accent)" font-size="7">Copy</text>
+        </svg>
+      </div>
+      <h3>设计与原型</h3>
+      <p>交互式原型：滑块、动画、按钮。调好参数后一键复制回 Claude Code。</p>
+      <div class="tags"><span class="tag">UI 原型</span><span class="tag">动画调参</span></div>
+    </div>
+
+    <!-- 4: Reports (wide) -->
+    <div class="bento-cell wide" data-area="reports">
+      <div class="bento-preview" style="background:var(--surface)">
+        <svg viewBox="0 0 440 130" fill="none">
+          <rect x="10" y="10" width="420" height="110" rx="4" fill="var(--surface-hi)" stroke="var(--border)" stroke-width="0.5"/>
+          <rect x="22" y="24" width="100" height="6" rx="3" fill="var(--text)" opacity="0.8"/>
+          <rect x="22" y="38" width="200" height="3" rx="1" fill="var(--text-faint)" opacity="0.2"/>
+          <rect x="22" y="46" width="160" height="3" rx="1" fill="var(--text-faint)" opacity="0.2"/>
+          <rect x="22" y="54" width="180" height="3" rx="1" fill="var(--text-faint)" opacity="0.2"/>
+          <rect x="22" y="70" width="12" height="38" rx="2" fill="var(--accent)" opacity="0.35"/>
+          <rect x="40" y="80" width="12" height="28" rx="2" fill="var(--accent)" opacity="0.45"/>
+          <rect x="58" y="66" width="12" height="42" rx="2" fill="var(--accent)" opacity="0.55"/>
+          <rect x="76" y="74" width="12" height="34" rx="2" fill="var(--accent)" opacity="0.65"/>
+          <rect x="94" y="62" width="12" height="46" rx="2" fill="var(--accent)" opacity="0.8"/>
+          <rect x="112" y="70" width="12" height="38" rx="2" fill="var(--accent)" opacity="0.9"/>
+          <rect x="270" y="70" width="150" height="38" rx="4" fill="var(--accent-sub)" stroke="var(--accent)" stroke-width="0.5"/>
+          <text x="345" y="86" text-anchor="middle" fill="var(--accent)" font-size="8">Token Bucket</text>
+          <text x="345" y="100" text-anchor="middle" fill="var(--text-faint)" font-size="7">flow diagram</text>
+        </svg>
+      </div>
+      <h3>报告与调研</h3>
+      <p>从 Slack、代码库、Git 历史、互联网等多源数据合成可读报告。支持 SVG 图表、交互式展示。</p>
+      <div class="tags"><span class="tag">周报</span><span class="tag">研究文档</span><span class="tag">事件报告</span></div>
+    </div>
+
+    <!-- 5: Custom Editor -->
+    <div class="bento-cell" data-area="editor">
+      <div class="bento-preview" style="background:var(--surface)">
+        <svg viewBox="0 0 200 130" fill="none">
+          <rect x="10" y="10" width="180" height="110" rx="4" fill="var(--surface-hi)" stroke="var(--border)" stroke-width="0.5"/>
+          <rect x="22" y="20" width="80" height="8" rx="2" fill="var(--text-faint)" opacity="0.2"/>
+          <rect x="22" y="34" width="156" height="16" rx="2" fill="var(--bg)" stroke="var(--border)" stroke-width="0.5"/>
+          <text x="30" y="46" fill="var(--text-faint)" font-size="6" font-family="'JetBrains Mono',monospace">feature_flags.auth.enabled</text>
+          <rect x="22" y="56" width="156" height="16" rx="2" fill="var(--bg)" stroke="var(--border)" stroke-width="0.5"/>
+          <text x="30" y="68" fill="var(--text-faint)" font-size="6" font-family="'JetBrains Mono',monospace">feature_flags.dark_mode</text>
+          <rect x="22" y="82" width="64" height="16" rx="2" fill="var(--warn-sub)" stroke="var(--warn)" stroke-width="0.5"/>
+          <text x="54" y="93" text-anchor="middle" fill="var(--warn)" font-size="7">Diff</text>
+          <rect x="92" y="82" width="64" height="16" rx="2" fill="var(--accent-sub)" stroke="var(--accent)" stroke-width="0.5"/>
+          <text x="124" y="93" text-anchor="middle" fill="var(--accent)" font-size="7">Validate</text>
+        </svg>
+      </div>
+      <h3>自定义编辑界面</h3>
+      <p>为特定数据构建一次性编辑器：拖拽排序、表单编辑、Prompt 调参。关键是要有导出按钮。</p>
+      <div class="tags"><span class="tag">配置编辑</span><span class="tag">Prompt 调优</span><span class="tag">数据标注</span></div>
+    </div>
+
+    <!-- 6: Data Ingestion -->
+    <div class="bento-cell" data-area="ingest">
+      <div class="bento-preview" style="background:var(--surface)">
+        <svg viewBox="0 0 200 130" fill="none">
+          <rect x="10" y="10" width="180" height="110" rx="4" fill="var(--surface-hi)" stroke="var(--border)" stroke-width="0.5"/>
+          <circle cx="26" cy="26" r="4" fill="var(--negative)"/><circle cx="38" cy="26" r="4" fill="var(--warn)"/><circle cx="50" cy="26" r="4" fill="var(--positive)"/>
+          <text x="76" y="29" fill="var(--text-faint)" font-size="7">Claude Code</text>
+          <text x="22" y="48" fill="var(--positive)" font-size="8" font-family="'JetBrains Mono',monospace">$ claude "make HTML file"</text>
+          <text x="22" y="66" fill="var(--text-faint)" font-size="7" font-family="'JetBrains Mono',monospace">reading codebase...</text>
+          <text x="22" y="80" fill="var(--text-faint)" font-size="7" font-family="'JetBrains Mono',monospace">generating HTML...</text>
+          <text x="22" y="100" fill="var(--positive)" font-size="8" font-family="'JetBrains Mono',monospace">output.html created</text>
+        </svg>
+      </div>
+      <h3>数据摄入优势</h3>
+      <p>Claude Code 能读取文件系统、MCP（Slack/Linear）、浏览器、Git 历史等，上下文远超纯对话。</p>
+      <div class="tags"><span class="tag">文件系统</span><span class="tag">MCP 集成</span><span class="tag">Git 历史</span></div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ===== HOW TO START ===== -->
+<section class="section">
+  <div class="section-head">
+    <div class="section-tag">入门指南</div>
+    <h2 class="section-title">如何开始？</h2>
+    <p class="section-desc">不需要 Skill 或复杂配置。直接告诉 Claude "make a HTML file"。</p>
+  </div>
+
+  <div class="code-block">
+    <div class="code-toolbar">
+      <div class="code-dot" style="background:var(--negative)"></div>
+      <div class="code-dot" style="background:var(--warn)"></div>
+      <div class="code-dot" style="background:var(--positive)"></div>
+      <span style="margin-left:8px">示例 Prompts</span>
+    </div>
+    <div class="code-content">
+      <div style="margin-bottom:14px">
+        <div style="color:var(--accent);font-size:10px;margin-bottom:3px;text-transform:uppercase;letter-spacing:1px">Planning</div>
+        <div style="color:var(--text)">"I'm not sure what direction to take the onboarding screen. Generate 6 distinctly different approaches — vary layout, tone, and density — and lay them out as a single HTML file in a grid so I can compare them side by side."</div>
+      </div>
+      <div style="margin-bottom:14px">
+        <div style="color:var(--accent);font-size:10px;margin-bottom:3px;text-transform:uppercase;letter-spacing:1px">Code Review</div>
+        <div style="color:var(--text)">"Help me review this PR by creating an HTML artifact. Render the actual diff with inline margin annotations, color-code findings by severity."</div>
+      </div>
+      <div style="margin-bottom:14px">
+        <div style="color:var(--accent);font-size:10px;margin-bottom:3px;text-transform:uppercase;letter-spacing:1px">Design</div>
+        <div style="color:var(--text)">"I want to prototype a new checkout button. Create a HTML file with sliders and options for me to try different animation parameters, give me a copy button."</div>
+      </div>
+      <div style="margin-bottom:14px">
+        <div style="color:var(--accent);font-size:10px;margin-bottom:3px;text-transform:uppercase;letter-spacing:1px">Reports</div>
+        <div style="color:var(--text)">"I don't understand how our rate limiter works. Read the relevant code and produce a single HTML explainer page: a diagram of the token-bucket flow, key code snippets annotated, and a 'gotchas' section."</div>
+      </div>
+      <div>
+        <div style="color:var(--accent);font-size:10px;margin-bottom:3px;text-transform:uppercase;letter-spacing:1px">Custom Editor</div>
+        <div style="color:var(--text)">"I need to reprioritize these 30 tickets. Make me an HTML file with each ticket as a draggable card across Now / Next / Later / Cut columns. Add a 'copy as markdown' button."</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ===== FAQ ===== -->
+<section class="section">
+  <div class="section-head">
+    <div class="section-tag">常见问题</div>
+    <h2 class="section-title">常见问题</h2>
+  </div>
+
+  <div id="faqContainer">
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">HTML 不是更消耗 Token 吗？</div>
+      <div class="faq-a">虽然 HTML 通常使用更多 Token，但 Opus 4.7 拥有 1M 上下文窗口，增加的 Token 用量几乎可以忽略。而且 HTML 更高的表达力意味着你更可能真正去阅读它——整体产出质量更好。</div>
+    </div>
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">你现在什么时候还用 Markdown？</div>
+      <div class="faq-a">作者坦言几乎在所有场景都停止使用 Markdown 了。他可能处于 HTML 极端主义者的位置，但对于 AI Agent 输出来说，HTML 确实全面占优。</div>
+    </div>
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">怎么查看 HTML 文件？</div>
+      <div class="faq-a">直接在浏览器中打开本地文件即可（可以让 Claude 帮你 open）。如果需要分享，上传到 S3 或任何静态托管就能获得可访问的链接。</div>
+    </div>
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">生成时间不是更长吗？</div>
+      <div class="faq-a">是的，HTML 生成可能比 Markdown 慢 2-4 倍。但考虑到结果的质量提升、可读性改善和交互能力，这些额外时间是完全值得的投入。</div>
+    </div>
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">版本控制怎么办？</div>
+      <div class="faq-a">这确实是 HTML 最大的缺点之一。HTML 的 diff 比较嘈杂且难以审查，不如 Markdown 干净。对于需要频繁 diff 的场景，需要权衡这个取舍。</div>
+    </div>
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">如何让 Claude 生成的 HTML 符合我的风格？</div>
+      <div class="faq-a">使用 frontend-design skill 可以帮助 Claude 生成更好的 HTML。如果需要匹配公司风格，可以让 Claude 读取你的代码库，创建一个设计系统 HTML 文件作为后续参考。</div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ===== CTA ===== -->
+<section class="cta-section">
+  <div class="quote-block" style="max-width:680px;margin:0 auto 40px;text-align:left">
+    <p>使用 HTML 让我感到自己更加深入地参与了与 Claude 的协作循环。我曾经担心自己不再深入阅读计划就意味着不得不完全放权给 Claude——但 HTML 让我比以往任何时候都更加「在环」。</p>
+    <div class="attr">Thariq, Claude Code Team</div>
+  </div>
+  <p style="color:var(--text-dim);margin-bottom:24px;font-size:15px">用 HTML 重新定义你与 AI Agent 的协作方式。</p>
+  <a href="https://thariqs.github.io/html-effectiveness/" target="_blank" class="cta-btn">查看更多示例</a>
+</section>
+
+<footer>
+  <p>基于 <a href="https://x.com/trq212/status/2052809885763747935" target="_blank">Thariq (Claude Code Team)</a> 原文改编 / AI 培训课程演示 / 2026 年 5 月</p>
+</footer>
+
+<!-- ===== SCRIPTS ===== -->
+<script>
+// Button playground
+const btnRadius = document.getElementById('btnRadius');
+const btnFont = document.getElementById('btnFont');
+const btnPad = document.getElementById('btnPad');
+const btnHue = document.getElementById('btnHue');
+const btnShadow = document.getElementById('btnShadow');
+const demoBtn = document.getElementById('demoBtn');
+
+function updateBtn() {
+  const r = btnRadius.value, f = btnFont.value, p = btnPad.value,
+        h = btnHue.value, s = btnShadow.value;
+  document.getElementById('radiusVal').textContent = r + 'px';
+  document.getElementById('fontVal').textContent = f + 'px';
+  document.getElementById('padVal').textContent = p + 'px ' + (p*2.5|0) + 'px';
+  document.getElementById('hueVal').textContent = h;
+  document.getElementById('shadowVal').textContent = s + '%';
+  demoBtn.style.borderRadius = r + 'px';
+  demoBtn.style.fontSize = f + 'px';
+  demoBtn.style.padding = p + 'px ' + (p*2.5|0) + 'px';
+  demoBtn.style.background = 'hsl(' + h + ', 60%, 48%)';
+  demoBtn.style.boxShadow = '0 8px 24px hsla(' + h + ', 60%, 48%, ' + (s/100*0.4).toFixed(2) + ')';
+}
+
+[btnRadius,btnFont,btnPad,btnHue,btnShadow].forEach(el => el.addEventListener('input', updateBtn));
+updateBtn();
+
+function copyParams() {
+  const params = JSON.stringify({
+    borderRadius: btnRadius.value+'px',
+    fontSize: btnFont.value+'px',
+    padding: btnPad.value+'px '+(btnPad.value*2.5|0)+'px',
+    color: 'hsl('+btnHue.value+', 60%, 48%)',
+    boxShadow: '0 8px 24px hsla('+btnHue.value+', 60%, 48%, '+(btnShadow.value/100*0.4).toFixed(2)+')'
+  }, null, 2);
+  navigator.clipboard.writeText(params).then(() => {
+    const st = document.getElementById('copyStatus');
+    st.style.opacity = '1';
+    setTimeout(() => st.style.opacity = '0', 1800);
+  });
+}
+
+// FAQ
+function toggleFaq(el) { el.classList.toggle('open'); }
+
+// Kanban
+let draggedCard = null;
+document.querySelectorAll('.kanban-card').forEach(card => {
+  card.addEventListener('dragstart', e => { draggedCard = card; card.style.opacity = '0.4'; e.dataTransfer.effectAllowed = 'move'; });
+  card.addEventListener('dragend', () => { draggedCard.style.opacity = '1'; draggedCard = null; });
+});
+document.querySelectorAll('.kanban-col').forEach(col => {
+  col.addEventListener('dragover', e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; });
+  col.addEventListener('drop', e => { e.preventDefault(); if(draggedCard) col.appendChild(draggedCard); });
+});
+
+function copyKanban() {
+  const cols = document.querySelectorAll('.kanban-col');
+  let md = '';
+  cols.forEach(col => {
+    md += '## ' + col.querySelector('.kanban-col-title').textContent + '\n';
+    col.querySelectorAll('.kanban-card').forEach(card => { md += '- ' + card.childNodes[0].textContent.trim() + '\n'; });
+    md += '\n';
+  });
+  navigator.clipboard.writeText(md).then(() => alert('Exported to clipboard.'));
+}
+
+// Theme toggle
+function toggleTheme() {
+  const html = document.documentElement;
+  const isLight = html.getAttribute('data-theme') === 'light';
+  html.setAttribute('data-theme', isLight ? 'dark' : 'light');
+  document.getElementById('themeLabel').textContent = isLight ? '浅色' : '深色';
+  const icon = document.getElementById('themeIcon');
+  if (isLight) {
+    icon.innerHTML = '<circle cx="7" cy="7" r="3" stroke="currentColor" stroke-width="1.2"/><path d="M7 1v2M7 11v2M1 7h2M11 7h2M2.8 2.8l1.4 1.4M9.8 9.8l1.4 1.4M2.8 11.2l1.4-1.4M9.8 4.2l1.4-1.4" stroke="currentColor" stroke-width="1" stroke-linecap="round"/>';
+  } else {
+    icon.innerHTML = '<path d="M12.5 8.5a5.5 5.5 0 11-7-7 4.5 4.5 0 007 7z" stroke="currentColor" stroke-width="1.2" fill="none"/>';
+  }
+}
+
+// Button click
+demoBtn.addEventListener('click', function() {
+  this.style.transform = 'scale(0.92)';
+  setTimeout(() => {
+    this.style.transform = 'scale(1)';
+    const h = btnHue.value, orig = this.style.background;
+    this.style.background = 'hsl('+((parseInt(h)+80)%360)+', 60%, 48%)';
+    setTimeout(() => { this.style.background = orig; }, 280);
+  }, 100);
+});
+</script>
+
+</body>
+</html>
